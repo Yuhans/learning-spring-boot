@@ -1,4 +1,4 @@
-package com.yuhans.learningspringboot.learningspringboot;
+package com.yuhans.learningspringboot.learningspringboot.App;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
