@@ -1,7 +1,7 @@
-package com.yuhans.learningspringboot.learningspringboot.service;
+package com.yuhans.learningspringboot.service;
 
-import com.yuhans.learningspringboot.learningspringboot.domain.Image;
-import com.yuhans.learningspringboot.learningspringboot.repository.ImageRepository;
+import com.yuhans.learningspringboot.domain.Image;
+import com.yuhans.learningspringboot.repository.ImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;

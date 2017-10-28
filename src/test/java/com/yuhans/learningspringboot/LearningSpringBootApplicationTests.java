@@ -1,4 +1,4 @@
-package com.yuhans.learningspringboot.learningspringboot;
+package com.yuhans.learningspringboot;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

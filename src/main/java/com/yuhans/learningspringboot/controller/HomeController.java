@@ -1,10 +1,9 @@
-package com.yuhans.learningspringboot.learningspringboot.controller;
+package com.yuhans.learningspringboot.controller;
 
-import com.yuhans.learningspringboot.learningspringboot.service.ImageService;
+import com.yuhans.learningspringboot.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,13 +11,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Controller
 public class HomeController {
 
     private static final String BASE_PATH = "/images";
-    private static final String FILENAME = "{filename:.+}";
+    private static final String FILENAME = "{fileName:.+}";
 
     private final ImageService imageService;
 
@@ -44,12 +46,14 @@ public class HomeController {
 
     @RequestMapping(method = RequestMethod.POST, value = BASE_PATH)
     @ResponseBody
-    public ResponseEntity<?> createFile(@RequestParam("file")MultipartFile file, HttpRequest request) {
+    public ResponseEntity<?> createFile(@RequestParam("file")MultipartFile file, HttpServletRequest request) {
         try {
             imageService.createImage(file);
-            return ResponseEntity.created(request.getURI().resolve(file.getOriginalFilename() + "/raw"))
+            final URI locationUri = new URI(request.getRequestURL().toString() + "/")
+                    .resolve(file.getOriginalFilename() + "/raw");
+            return ResponseEntity.created(locationUri)
                     .body("Successfully upload " + file.getOriginalFilename());
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to upload " + file.getOriginalFilename() + " => " + e.getMessage());
         }

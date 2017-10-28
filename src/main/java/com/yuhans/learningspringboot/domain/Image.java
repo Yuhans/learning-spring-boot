@@ -1,7 +1,8 @@
-package com.yuhans.learningspringboot.learningspringboot.domain;
+package com.yuhans.learningspringboot.domain;
 
 import lombok.Data;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,12 +11,13 @@ import javax.persistence.Id;
 
 @Data
 @Entity
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NonNull
     private final String name;
 }
