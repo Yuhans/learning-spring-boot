@@ -9,6 +9,8 @@
 
     <h3 th:if="${#vars['flash.message']}" th:text="${#vars['flash.message']}" class="flash"></h3>
 
+    <h3>Some information for checking LiveReload</h3>
+
     <div>
         <h3 th:text="${page.number + 1} + ' of ' + ${page.totalPages}"></h3>
         <h4 th:text="${page.size} + ' item(s) per page'"></h4>
