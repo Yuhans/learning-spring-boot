@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Learning Spring Boot: Spring-a-Gram</title>
     <link rel="stylesheet" href="/main.css" />
+    <script src="webjars/requirejs/2.2.0/require.js"></script>
 </head>
 <body>
 
@@ -46,5 +47,26 @@
             <p><input type="submit" value="Upload"/></p>
         </form>
     </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        (function () {
+            window.require(['webjars/stompjs/2.3.3/lib/stomp', 'webjars/sockjs-client/1.1.0/dist/sockjs'], function (stomp, SockJS) {
+                var socket = SockJS('/imageMessages');
+                var stompClient = Stomp.over(socket);
+
+                var redrawCurrentPage = function (message) {
+                    console.log(message);
+                    window.location = /*[[@{/(size=${page.size}, page=${page.number})}]]*/'';
+                };
+                stompClient.connect({/*optional headers*/}, function (frame) {
+                    stompClient.subscribe('/topic/newImage', redrawCurrentPage);
+                    stompClient.subscribe('/topic/deleteImage', redrawCurrentPage);
+                })
+            })
+        })();
+        /*]]>*/
+    </script>
+
 </body>
 </html>
