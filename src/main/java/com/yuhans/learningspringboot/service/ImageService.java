@@ -17,7 +17,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
@@ -35,7 +37,7 @@ public class ImageService {
 
     private static final String UPLOAD_ROOT = "upload-dir";
 
-    private final ImageRepository repository;
+    private final ImageRepository imageRepository;
     private final ResourceLoader resourceLoader;
     private final CounterService counterService;
     private final GaugeService gaugeService;
@@ -53,7 +55,7 @@ public class ImageService {
                         SimpMessagingTemplate messagingTemplate,
                         UserRepository userRepository) {
 
-        this.repository = imageRepository;
+        this.imageRepository = imageRepository;
         this.resourceLoader = resourceLoader;
         this.counterService = counterService;
         this.gaugeService = gaugeService;
@@ -67,7 +69,7 @@ public class ImageService {
     }
 
     public Page<Image> findPage(Pageable pageable) {
-        return repository.findAll(pageable);
+        return imageRepository.findAll(pageable);
     }
 
     public Resource findOneImage(String fileName) {
@@ -77,7 +79,7 @@ public class ImageService {
     public void createImage(MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
             Files.copy(file.getInputStream(), Paths.get(UPLOAD_ROOT, file.getOriginalFilename()));
-            repository.save(new Image(
+            imageRepository.save(new Image(
                     file.getOriginalFilename(),
                     userRepository.findByUserName(SecurityContextHolder.getContext().getAuthentication().getName())));
             counterService.increment("files.uploaded");
@@ -87,9 +89,10 @@ public class ImageService {
         }
     }
 
-    public void deleteImages(String fileName) throws IOException {
-        final Image byName = repository.findByName(fileName);
-        repository.delete(byName);
+    @PreAuthorize("@imageRepository.findByName(#fileName)?.owner?.userName == authentication?.name or hasRole('ADMIN')")
+    public void deleteImages(@Param("fileName") String fileName) throws IOException {
+        final Image byName = imageRepository.findByName(fileName);
+        imageRepository.delete(byName);
         Files.deleteIfExists(Paths.get(UPLOAD_ROOT, fileName));
         messagingTemplate.convertAndSend("/topic/deleteImage", fileName);
     }
