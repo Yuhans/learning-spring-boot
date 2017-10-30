@@ -2,26 +2,33 @@ package com.yuhans.learningspringboot.domain;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 
 @Data
-@Entity
-@NoArgsConstructor(force = true)
 @RequiredArgsConstructor
-public class Image {
+@NoArgsConstructor(force = true)
+@Entity
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private final String name;
+    @NonNull
+    private final String userName;
 
-    @OneToOne
-    private final User owner;
+    @NonNull
+    private final String password;
+
+    @NonNull
+    private final String[] roles;
+
 }
+
+

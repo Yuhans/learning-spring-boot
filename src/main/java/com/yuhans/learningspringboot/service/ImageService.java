@@ -1,7 +1,9 @@
 package com.yuhans.learningspringboot.service;
 
 import com.yuhans.learningspringboot.domain.Image;
+import com.yuhans.learningspringboot.domain.User;
 import com.yuhans.learningspringboot.repository.ImageRepository;
+import com.yuhans.learningspringboot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
@@ -16,6 +18,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.FileSystemUtils;
@@ -39,21 +42,24 @@ public class ImageService {
     private final InMemoryMetricRepository inMemoryMetricRepository;
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ImageService(ImageRepository repository,
+    public ImageService(ImageRepository imageRepository,
                         ResourceLoader resourceLoader,
                         @Qualifier("counterService") CounterService counterService,
                         @Qualifier("gaugeService") GaugeService gaugeService,
                         InMemoryMetricRepository inMemoryMetricRepository,
-                        SimpMessagingTemplate messagingTemplate) {
+                        SimpMessagingTemplate messagingTemplate,
+                        UserRepository userRepository) {
 
-        this.repository = repository;
+        this.repository = imageRepository;
         this.resourceLoader = resourceLoader;
         this.counterService = counterService;
         this.gaugeService = gaugeService;
         this.inMemoryMetricRepository = inMemoryMetricRepository;
         this.messagingTemplate = messagingTemplate;
+        this.userRepository = userRepository;
 
         this.counterService.reset("files.uploaded");
         this.gaugeService.submit("files.uploaded.lastBytes", 0);
@@ -71,7 +77,9 @@ public class ImageService {
     public void createImage(MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
             Files.copy(file.getInputStream(), Paths.get(UPLOAD_ROOT, file.getOriginalFilename()));
-            repository.save(new Image(file.getOriginalFilename()));
+            repository.save(new Image(
+                    file.getOriginalFilename(),
+                    userRepository.findByUserName(SecurityContextHolder.getContext().getAuthentication().getName())));
             counterService.increment("files.uploaded");
             gaugeService.submit("files.uploaded.lastBytes", file.getSize());
             inMemoryMetricRepository.increment(new Delta<Number>("files.uploaded.totalBytes", file.getSize()));
@@ -87,20 +95,24 @@ public class ImageService {
     }
 
     @Bean
-    CommandLineRunner setUp(ImageRepository repository) throws IOException {
+    CommandLineRunner setUp(ImageRepository imageRepository,
+                            UserRepository userRepository) throws IOException {
         return args -> {
             FileSystemUtils.deleteRecursively(new File(UPLOAD_ROOT));
 
             Files.createDirectory(Paths.get(UPLOAD_ROOT));
 
+            User yuhans = userRepository.save(new User("yuhans", "password", new String[]{"ROLE_ADMIN", "ROLE_USER"}));
+            User guest = userRepository.save(new User("guest", "password", new String[]{"ROLE_USER"}));
+
             FileCopyUtils.copy("Test file", new FileWriter(UPLOAD_ROOT + "/test"));
-            repository.save(new Image("test"));
+            imageRepository.save(new Image("test", yuhans));
 
             FileCopyUtils.copy("Test file2", new FileWriter(UPLOAD_ROOT + "/test2"));
-            repository.save(new Image("test2"));
+            imageRepository.save(new Image("test2", yuhans));
 
             FileCopyUtils.copy("Test file3", new FileWriter(UPLOAD_ROOT + "/test3"));
-            repository.save(new Image("test3"));
+            imageRepository.save(new Image("test3", guest));
         };
     }
 }
