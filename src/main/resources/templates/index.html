@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head>
     <meta charset="UTF-8" />
     <title>Learning Spring Boot: Spring-a-Gram</title>
@@ -7,6 +7,15 @@
     <script src="webjars/requirejs/2.2.0/require.js"></script>
 </head>
 <body>
+
+    <div>
+        <span sec:authentication="name"/>has<span sec:authentication="authorities"/>
+        <form method="post" th:action="@{/logout}">
+            <input type="submit" value="Sign Off"/>
+        </form>
+    </div>
+
+    <h1>Learning Srping Boot</h1>
 
     <h3 th:if="${#vars['flash.message']}" th:text="${#vars['flash.message']}" class="flash"></h3>
 
